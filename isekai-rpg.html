@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>異世界転生 · Isekai RPG</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Noto+Sans+JP:wght@300;400;700&family=Be+Vietnam+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a14;
+    --panel: #11111f;
+    --panel2: #181830;
+    --gold: #f0c060;
+    --gold2: #ffd97d;
+    --blue: #4fc3f7;
+    --purple: #b388ff;
+    --red: #ef5350;
+    --green: #66bb6a;
+    --text: #e8e0f0;
+    --dim: #7070a0;
+    --border: #2a2a4a;
+    --hp-color: #ef5350;
+    --mp-color: #42a5f5;
+    --xp-color: #ffd54f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    overflow-x: hidden;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Be Vietnam Pro', 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 20% 80%, #1a0a3a44 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, #0a1a3a44 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* STARS */
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--d) ease-in-out infinite alternate;
+    opacity: 0;
+  }
+  @keyframes twinkle { from { opacity: 0.1; } to { opacity: 0.8; } }
+
+  #app {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 420px;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    padding: 0;
+  }
+
+  /* ======= SCREENS ======= */
+  .screen {
+    display: none; flex-direction: column;
+    width: 100%; min-height: 100vh;
+    padding: 16px 16px 32px 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen.active { display: flex; }
+
+  /* ======= TITLE SCREEN ======= */
+  #screen-title {
+    align-items: center; justify-content: center; gap: 24px;
+    text-align: center;
+    min-height: 100vh;
+  }
+  .title-jp {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 13px; letter-spacing: 4px;
+    color: var(--dim); text-transform: uppercase;
+    animation: fadeIn 2s ease;
+  }
+  .title-main {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 30px; font-weight: 700;
+    background: linear-gradient(135deg, var(--gold), var(--gold2), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+    animation: fadeIn 1.5s ease;
+  }
+  .title-sub {
+    font-size: 12px; color: var(--dim); letter-spacing: 2px;
+    animation: fadeIn 2.5s ease;
+  }
+  .title-art {
+    font-size: 80px; line-height: 1;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .btn-start {
+    margin-top: 8px;
+    padding: 14px 40px;
+    background: linear-gradient(135deg, #2a1a5e, #1a2a5e);
+    border: 1px solid var(--purple);
+    border-radius: 4px;
+    color: var(--gold2);
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 14px; letter-spacing: 2px;
+    cursor: pointer;
+    box-shadow: 0 0 20px #b388ff44;
+    transition: all 0.2s;
+    animation: fadeIn 3s ease;
+  }
+  .btn-start:active { transform: scale(0.96); box-shadow: 0 0 8px #b388ff44; }
+
+  /* ======= NAME SCREEN ======= */
+  #screen-name {
+    align-items: center; justify-content: center; gap: 20px;
+    text-align: center;
+    min-height: 100vh;
+  }
+  .screen-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 18px; color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .screen-desc { font-size: 13px; color: var(--dim); line-height: 1.6; max-width: 300px; }
+  .name-input {
+    width: 100%; max-width: 280px;
+    padding: 12px 16px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 16px; text-align: center;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .name-input:focus { border-color: var(--purple); }
+  .name-input::placeholder { color: var(--dim); }
+
+  /* ======= CLASS SELECT ======= */
+  #screen-class { gap: 16px; }
+  .class-cards { display: flex; flex-direction: column; gap: 12px; }
+  .class-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .class-card:active, .class-card.selected {
+    border-color: var(--gold);
+    background: #1a1a2e;
+    box-shadow: 0 0 16px #f0c06022;
+  }
+  .class-icon { font-size: 36px; flex-shrink: 0; }
+  .class-info { flex: 1; }
+  .class-name { font-family: 'Cinzel Decorative', serif; font-size: 15px; color: var(--gold); }
+  .class-name-vi { font-size: 12px; color: var(--dim); margin-bottom: 6px; }
+  .class-desc { font-size: 12px; color: var(--text); line-height: 1.5; margin-bottom: 8px; }
+  .class-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+  .stat-tag {
+    font-size: 11px; padding: 2px 8px;
+    border-radius: 20px; border: 1px solid;
+  }
+  .stat-tag.hp { color: var(--red); border-color: var(--red); }
+  .stat-tag.mp { color: var(--blue); border-color: var(--blue); }
+  .stat-tag.atk { color: var(--gold); border-color: var(--gold); }
+  .stat-tag.spd { color: var(--green); border-color: var(--green); }
+
+  /* ======= STORY SCREEN ======= */
+  #screen-story {
+    align-items: center; justify-content: center; gap: 20px;
+    text-align: center; padding: 24px 24px 40px;
+    min-height: 100vh;
+  }
+  .story-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    font-size: 13px; line-height: 2;
+    color: var(--text);
+    max-width: 360px;
+    position: relative;
+  }
+  .story-box .speaker {
+    font-size: 11px; color: var(--gold);
+    letter-spacing: 1px; margin-bottom: 8px;
+    font-family: 'Cinzel Decorative', serif;
+  }
+  #story-text { min-height: 80px; }
+
+  /* ======= GAME SCREEN ======= */
+  #screen-game { gap: 12px; padding: 12px 12px 32px; justify-content: flex-start; }
+
+  /* TOP BAR */
+  .top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .player-name-top {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 12px; color: var(--gold);
+  }
+  .level-badge {
+    background: linear-gradient(135deg, #2a1a5e, #1a2a5e);
+    border: 1px solid var(--purple);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 11px; color: var(--purple);
+    letter-spacing: 1px;
+  }
+  .class-badge {
+    font-size: 11px; color: var(--dim);
+  }
+
+  /* STAT BARS */
+  .stat-bars { display: flex; flex-direction: column; gap: 6px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; }
+  .bar-label { font-size: 11px; color: var(--dim); width: 28px; text-align: right; letter-spacing: 1px; }
+  .bar-track { flex: 1; height: 8px; background: #1a1a2e; border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+  .bar-fill.hp { background: linear-gradient(90deg, #c62828, #ef5350); }
+  .bar-fill.mp { background: linear-gradient(90deg, #1565c0, #42a5f5); }
+  .bar-fill.xp { background: linear-gradient(90deg, #f57f17, #ffd54f); }
+  .bar-val { font-size: 10px; color: var(--dim); width: 56px; text-align: left; }
+
+  /* BATTLE AREA */
+  .battle-area {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .enemy-section { text-align: center; }
+  .enemy-art { font-size: 56px; line-height: 1; animation: float 2s ease-in-out infinite; margin-bottom: 8px; }
+  .enemy-name { font-family: 'Cinzel Decorative', serif; font-size: 14px; color: var(--red); margin-bottom: 4px; }
+  .enemy-hp-bar { width: 100%; height: 8px; background: #1a0a0a; border-radius: 4px; overflow: hidden; border: 1px solid #4a1a1a; }
+  .enemy-hp-fill { height: 100%; background: linear-gradient(90deg, #b71c1c, #ef5350); border-radius: 4px; transition: width 0.4s ease; }
+  .enemy-hp-text { font-size: 11px; color: var(--dim); margin-top: 4px; }
+
+  /* BATTLE LOG */
+  .battle-log {
+    background: #0d0d1a;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px; line-height: 1.8;
+    color: var(--dim);
+    min-height: 72px; max-height: 72px;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .battle-log .log-entry { color: var(--text); }
+  .battle-log .log-entry.dmg { color: #ff8a80; }
+  .battle-log .log-entry.heal { color: var(--green); }
+  .battle-log .log-entry.sys { color: var(--gold); }
+  .battle-log .log-entry.enemy-dmg { color: #80cbc4; }
+
+  /* SKILLS */
+  .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .skill-btn {
+    padding: 12px 8px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .skill-btn:active:not(:disabled) { transform: scale(0.95); }
+  .skill-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .skill-btn.warrior { border-color: #ef535055; }
+  .skill-btn.warrior:active:not(:disabled) { background: #2a1010; border-color: var(--red); }
+  .skill-btn.mage { border-color: #42a5f555; }
+  .skill-btn.mage:active:not(:disabled) { background: #0a1025; border-color: var(--blue); }
+  .skill-btn.rogue { border-color: #66bb6a55; }
+  .skill-btn.rogue:active:not(:disabled) { background: #0a1a0a; border-color: var(--green); }
+  .skill-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+  .skill-name { font-size: 11px; color: var(--text); display: block; }
+  .skill-mp { font-size: 10px; color: var(--blue); display: block; margin-top: 2px; }
+
+  /* MAP / EXPLORE */
+  #screen-map { gap: 12px; padding: 12px 12px 32px; }
+  .map-header { text-align: center; }
+  .map-title { font-family: 'Cinzel Decorative', serif; font-size: 16px; color: var(--gold); }
+  .map-sub { font-size: 11px; color: var(--dim); margin-top: 4px; }
+  .map-areas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .area-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .area-card:active { transform: scale(0.96); border-color: var(--gold); }
+  .area-card.locked { opacity: 0.3; cursor: not-allowed; }
+  .area-icon { font-size: 32px; margin-bottom: 8px; }
+  .area-name { font-size: 12px; color: var(--gold); font-weight: 600; margin-bottom: 4px; }
+  .area-level { font-size: 11px; color: var(--dim); }
+
+  /* DEATH / WIN screen */
+  #screen-result {
+    align-items: center; justify-content: center; gap: 20px;
+    text-align: center;
+    min-height: 100vh;
+  }
+  .result-art { font-size: 72px; animation: float 2s ease-in-out infinite; }
+  .result-title { font-family: 'Cinzel Decorative', serif; font-size: 24px; }
+  .result-title.win { color: var(--gold); }
+  .result-title.lose { color: var(--red); }
+  .result-desc { font-size: 13px; color: var(--dim); line-height: 1.8; max-width: 280px; }
+  .result-rewards {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 24px;
+    display: flex; flex-direction: column; gap: 8px;
+    min-width: 200px;
+  }
+  .reward-row { display: flex; justify-content: space-between; font-size: 13px; }
+  .reward-label { color: var(--dim); }
+  .reward-val { color: var(--gold); font-weight: 600; }
+
+  /* BTN */
+  .btn {
+    padding: 12px 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+    border: 1px solid;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary {
+    background: linear-gradient(135deg, #2a1a5e, #1a2a5e);
+    border-color: var(--purple);
+    color: var(--gold2);
+    box-shadow: 0 0 16px #b388ff33;
+  }
+  .btn-danger {
+    background: #1a0a0a;
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .btn-success {
+    background: #0a1a0a;
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  @keyframes popIn { 0%{transform:scale(0.8);opacity:0} 60%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+  @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+  .shake { animation: shake 0.3s ease; }
+  .pop { animation: popIn 0.3s ease; }
+  .slide-up { animation: slideUp 0.3s ease; }
+
+  /* DAMAGE FLOAT */
+  .dmg-float {
+    position: absolute;
+    font-size: 20px; font-weight: 700;
+    color: #ff5252;
+    pointer-events: none;
+    animation: dmgAnim 0.8s ease forwards;
+    z-index: 100;
+    text-shadow: 0 0 8px #ff525288;
+  }
+  .dmg-float.heal-f { color: var(--green); }
+  .dmg-float.mp-f { color: var(--blue); }
+  @keyframes dmgAnim {
+    0% { opacity:1; transform: translateY(0) scale(1); }
+    100% { opacity:0; transform: translateY(-40px) scale(1.3); }
+  }
+
+  .divider { width: 100%; height: 1px; background: var(--border); }
+
+  .turn-indicator {
+    text-align: center;
+    font-size: 11px; letter-spacing: 2px;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+  .turn-indicator span { color: var(--gold); }
+
+  /* ======= MODAL ======= */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: #00000099;
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-sheet {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    width: 100%; max-width: 420px;
+    max-height: 85vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px 16px 40px;
+    display: flex; flex-direction: column; gap: 14px;
+    animation: slideUpSheet 0.25s ease;
+  }
+  @keyframes slideUpSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 15px; color: var(--gold);
+    text-align: center;
+  }
+  .modal-close {
+    position: absolute; top: 12px; right: 16px;
+    font-size: 20px; color: var(--dim); cursor: pointer;
+    background: none; border: none;
+  }
+  .modal-sheet { position: relative; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-card .s-icon { font-size: 22px; margin-bottom: 4px; }
+  .stat-card .s-label { font-size: 10px; color: var(--dim); letter-spacing: 1px; text-transform: uppercase; }
+  .stat-card .s-val { font-size: 18px; font-weight: 700; color: var(--gold); }
+  .stat-card .s-sub { font-size: 10px; color: var(--dim); margin-top: 2px; }
+
+  .equip-slots { display: flex; flex-direction: column; gap: 8px; }
+  .equip-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .equip-icon { font-size: 22px; }
+  .equip-info { flex: 1; }
+  .equip-slot-name { font-size: 10px; color: var(--dim); letter-spacing: 1px; }
+  .equip-item-name { font-size: 13px; color: var(--text); }
+  .equip-bonus { font-size: 11px; color: var(--green); }
+
+  /* SHOP */
+  .shop-gold {
+    text-align: center;
+    font-size: 14px; color: var(--gold);
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+  }
+  .shop-items { display: flex; flex-direction: column; gap: 10px; }
+  .shop-item {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .shop-item:active:not(.owned):not(.cant-afford) { border-color: var(--gold); background: #1a1a10; }
+  .shop-item.owned { opacity: 0.5; cursor: default; }
+  .shop-item.cant-afford { opacity: 0.35; cursor: not-allowed; }
+  .shop-item-icon { font-size: 28px; flex-shrink: 0; }
+  .shop-item-info { flex: 1; }
+  .shop-item-name { font-size: 13px; color: var(--text); font-weight: 600; }
+  .shop-item-desc { font-size: 11px; color: var(--dim); margin-top: 2px; }
+  .shop-item-bonus { font-size: 11px; color: var(--green); }
+  .shop-item-price {
+    font-size: 13px; color: var(--gold); font-weight: 700;
+    text-align: right; flex-shrink: 0;
+  }
+  .shop-item-price.owned-tag { color: var(--green); font-size: 11px; }
+
+  /* MAP buttons row */
+  .map-btn-row { display: flex; gap: 8px; margin-top: 8px; }
+  .map-btn-row .btn { flex: 1; padding: 10px 4px; font-size: 12px; }
+
+  /* ======= TUTORIAL TOOLTIP ======= */
+  .tut-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    pointer-events: none;
+  }
+  .tut-overlay.active { display: block; }
+  .tut-backdrop {
+    position: absolute; inset: 0;
+    background: #000000cc;
+    pointer-events: all;
+  }
+  .tut-highlight {
+    position: absolute;
+    border-radius: 10px;
+    box-shadow: 0 0 0 4000px #000000cc, 0 0 0 3px var(--gold);
+    pointer-events: none;
+    transition: all 0.35s ease;
+    z-index: 201;
+  }
+  .tut-bubble {
+    position: absolute;
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    padding: 14px 16px;
+    max-width: 280px;
+    z-index: 202;
+    pointer-events: all;
+    box-shadow: 0 4px 24px #00000088;
+    animation: popIn 0.25s ease;
+  }
+  .tut-bubble-arrow {
+    font-size: 11px; color: var(--dim); margin-bottom: 6px; letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .tut-bubble-text { font-size: 13px; color: var(--text); line-height: 1.7; }
+  .tut-bubble-btn {
+    margin-top: 12px; width: 100%;
+    padding: 10px;
+    background: linear-gradient(135deg, #2a1a5e, #1a2a5e);
+    border: 1px solid var(--purple);
+    border-radius: 6px;
+    color: var(--gold2);
+    font-size: 13px; cursor: pointer;
+    pointer-events: all;
+  }
+  .tut-step-indicator {
+    font-size: 10px; color: var(--dim); text-align: right; margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div id="app">
+
+  <!-- TITLE -->
+  <div class="screen active" id="screen-title">
+    <div class="title-jp">異世界転生 RPG</div>
+    <div class="title-art">⚔️</div>
+    <div class="title-main">ISEKAI<br>CHRONICLES</div>
+    <div class="title-sub">Biên niên sử dị giới</div>
+    <div style="font-size:12px;color:var(--dim);line-height:1.8;max-width:280px;text-align:center">
+      Bạn đã chết. Nhưng câu chuyện chưa kết thúc —<br>một thế giới mới đang chờ đợi...
+    </div>
+    <button class="btn-start" onclick="goTo('name')">▶ BẮT ĐẦU</button>
+  </div>
+
+  <!-- NAME -->
+  <div class="screen" id="screen-name">
+    <div class="title-art" style="font-size:50px">📜</div>
+    <div class="screen-title">Ngươi là ai?</div>
+    <div class="screen-desc">Vị thần tái sinh hỏi tên ngươi trước khi ban phép màu...</div>
+    <input class="name-input" id="name-input" type="text" placeholder="Nhập tên nhân vật..." maxlength="16">
+    <button class="btn btn-primary" onclick="confirmName()">Xác nhận</button>
+  </div>
+
+  <!-- CLASS -->
+  <div class="screen" id="screen-class">
+    <div style="text-align:center;margin-bottom:4px">
+      <div class="screen-title">Chọn Nghề Nghiệp</div>
+      <div style="font-size:12px;color:var(--dim)">Vị thần trao cho ngươi một sức mạnh...</div>
+    </div>
+    <div class="class-cards">
+      <div class="class-card" onclick="selectClass('warrior')">
+        <div class="class-icon">⚔️</div>
+        <div class="class-info">
+          <div class="class-name">Warrior</div>
+          <div class="class-name-vi">Kiếm Sĩ</div>
+          <div class="class-desc">Chiến binh mạnh mẽ, HP cao, đòn đánh nặng. Bắt đầu yếu nhưng khi đủ level sẽ trở thành bất khả chiến bại.</div>
+          <div class="class-stats">
+            <span class="stat-tag hp">HP: Cao</span>
+            <span class="stat-tag atk">ATK: Cao</span>
+            <span class="stat-tag mp">MP: Thấp</span>
+          </div>
+        </div>
+      </div>
+      <div class="class-card" onclick="selectClass('mage')">
+        <div class="class-icon">🔮</div>
+        <div class="class-info">
+          <div class="class-name">Mage</div>
+          <div class="class-name-vi">Pháp Sư</div>
+          <div class="class-desc">Pháp thuật hủy diệt, dame cực cao nhưng HP yếu. Cần chiến lược để tồn tại. Skill AOE mạnh nhất khi lên cap.</div>
+          <div class="class-stats">
+            <span class="stat-tag hp">HP: Thấp</span>
+            <span class="stat-tag mp">MP: Rất cao</span>
+            <span class="stat-tag atk">Dame: Cao nhất</span>
+          </div>
+        </div>
+      </div>
+      <div class="class-card" onclick="selectClass('rogue')">
+        <div class="class-icon">🗡️</div>
+        <div class="class-info">
+          <div class="class-name">Rogue</div>
+          <div class="class-name-vi">Thích Khách</div>
+          <div class="class-desc">Tốc độ vượt trội, skill ẩn thân và combo. Crit damage cao. Lối chơi linh hoạt, tấn công trước địch.</div>
+          <div class="class-stats">
+            <span class="stat-tag spd">SPD: Cao nhất</span>
+            <span class="stat-tag atk">Crit: Cao</span>
+            <span class="stat-tag hp">HP: Trung bình</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STORY -->
+  <div class="screen" id="screen-story">
+    <div class="title-art" style="font-size:50px" id="story-art">✨</div>
+    <div class="story-box">
+      <div class="speaker" id="story-speaker">Vị Thần</div>
+      <div id="story-text"></div>
+    </div>
+    <button class="btn btn-primary" id="story-btn" onclick="nextStory()">Tiếp tục →</button>
+  </div>
+
+  <!-- MAP -->
+  <div class="screen" id="screen-map">
+    <div class="top-bar">
+      <div>
+        <div class="player-name-top" id="map-player-name">Hero</div>
+        <div class="class-badge" id="map-class-badge">Warrior</div>
+      </div>
+      <div class="level-badge" id="map-level-badge">Lv.1</div>
+    </div>
+    <div class="stat-bars">
+      <div class="bar-row">
+        <div class="bar-label">HP</div>
+        <div class="bar-track"><div class="bar-fill hp" id="map-hp-bar" style="width:100%"></div></div>
+        <div class="bar-val" id="map-hp-val">100/100</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">XP</div>
+        <div class="bar-track"><div class="bar-fill xp" id="map-xp-bar" style="width:0%"></div></div>
+        <div class="bar-val" id="map-xp-val">0/100</div>
+      </div>
+    </div>
+    <div class="map-header">
+      <div class="map-title">🗺️ Bản đồ thế giới</div>
+      <div class="map-sub">Chọn khu vực để chiến đấu</div>
+    </div>
+    <div class="map-areas" id="map-areas"></div>
+    <div class="map-btn-row">
+      <button class="btn btn-primary" onclick="openStats()">📊 Thông số</button>
+      <button class="btn btn-success" onclick="openShop()">🏪 Shop</button>
+    </div>
+    <button class="btn btn-danger" onclick="goTo('title'); resetGame();" style="margin-top:8px">↩ Menu chính</button>
+  </div>
+
+  <!-- MODAL STATS -->
+  <div class="modal-overlay" id="modal-stats" onclick="closeModal('stats')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('stats')">✕</button>
+      <div class="modal-title">📊 Thông Số Nhân Vật</div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div style="font-size:11px;color:var(--dim);text-align:center;letter-spacing:1px">TRANG BỊ ĐANG MẶC</div>
+      <div class="equip-slots" id="equip-slots"></div>
+    </div>
+  </div>
+
+  <!-- MODAL SHOP -->
+  <div class="modal-overlay" id="modal-shop" onclick="closeModal('shop')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('shop')">✕</button>
+      <div class="modal-title">🏪 Cửa Hàng</div>
+      <div class="shop-gold" id="shop-gold">💰 Gold: 0</div>
+      <div class="shop-items" id="shop-items"></div>
+    </div>
+  </div>
+
+  <!-- GAME (BATTLE) -->
+  <div class="screen" id="screen-game">
+    <div class="top-bar">
+      <div>
+        <div class="player-name-top" id="battle-player-name">Hero</div>
+        <div class="class-badge" id="battle-class-badge">Warrior</div>
+      </div>
+      <div class="level-badge" id="battle-level-badge">Lv.1</div>
+    </div>
+    <div class="stat-bars">
+      <div class="bar-row">
+        <div class="bar-label">HP</div>
+        <div class="bar-track"><div class="bar-fill hp" id="hp-bar" style="width:100%"></div></div>
+        <div class="bar-val" id="hp-val">100/100</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">MP</div>
+        <div class="bar-track"><div class="bar-fill mp" id="mp-bar" style="width:100%"></div></div>
+        <div class="bar-val" id="mp-val">50/50</div>
+      </div>
+    </div>
+    <div class="battle-area">
+      <div class="enemy-section" id="enemy-section">
+        <div class="enemy-art" id="enemy-art">👹</div>
+        <div class="enemy-name" id="enemy-name">Goblin</div>
+        <div class="enemy-hp-bar"><div class="enemy-hp-fill" id="enemy-hp-bar" style="width:100%"></div></div>
+        <div class="enemy-hp-text" id="enemy-hp-text">50 / 50</div>
+      </div>
+      <div class="turn-indicator" id="turn-indicator">Lượt của <span>bạn</span></div>
+      <div class="battle-log" id="battle-log">
+        <div class="log-entry sys">⚔️ Trận chiến bắt đầu!</div>
+      </div>
+    </div>
+    <div class="skills-grid" id="skills-grid"></div>
+    <button class="btn btn-danger" onclick="fleeBattle()" style="width:100%">🏃 Chạy trốn</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="result-art" id="result-art">🏆</div>
+    <div class="result-title" id="result-title">Chiến thắng!</div>
+    <div class="result-desc" id="result-desc">Ngươi đã chiến thắng!</div>
+    <div class="result-rewards" id="result-rewards"></div>
+    <button class="btn btn-primary" id="result-btn" onclick="afterBattle()">Tiếp tục</button>
+  </div>
+  <!-- TUTORIAL OVERLAY -->
+  <div id="tut-overlay" class="tut-overlay">
+    <div class="tut-highlight" id="tut-highlight"></div>
+    <div class="tut-bubble" id="tut-bubble">
+      <div class="tut-bubble-arrow" id="tut-arrow">💡 HƯỚNG DẪN</div>
+      <div class="tut-bubble-text" id="tut-text"></div>
+      <button class="tut-bubble-btn" id="tut-btn" onclick="nextTutStep()">Hiểu rồi →</button>
+      <div class="tut-step-indicator" id="tut-step-ind"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============ STARS ============
+(function() {
+  const s = document.getElementById('stars');
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'star';
+    const size = Math.random() * 2 + 1;
+    el.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      --d:${(Math.random()*3+1).toFixed(1)}s;
+      animation-delay:${(Math.random()*3).toFixed(1)}s;
+    `;
+    s.appendChild(el);
+  }
+})();
+
+// ============ DATA ============
+const CLASSES = {
+  warrior: {
+    name: 'Warrior', nameVi: 'Kiếm Sĩ', icon: '⚔️',
+    baseHP: 120, baseMP: 30, baseATK: 18, baseDEF: 10,
+    hpPerLv: 20, mpPerLv: 5, atkPerLv: 4, defPerLv: 2,
+    skills: [
+      { id:'attack', name:'Chém', icon:'⚔️', mp:0, type:'physical', power:1.0, desc:'Đòn tấn công cơ bản' },
+      { id:'slash', name:'Trảm', icon:'🗡️', mp:8, type:'physical', power:1.8, desc:'Chém mạnh x1.8' },
+      { id:'guard', name:'Phòng thủ', icon:'🛡️', mp:0, type:'defend', power:0, desc:'Giảm dame lượt này' },
+      { id:'reckless', name:'Tử chiến', icon:'💥', mp:12, type:'physical', power:2.5, desc:'ATK x2.5, nhận thêm dame' },
+    ]
+  },
+  mage: {
+    name: 'Mage', nameVi: 'Pháp Sư', icon: '🔮',
+    baseHP: 75, baseMP: 80, baseATK: 22, baseDEF: 5,
+    hpPerLv: 12, mpPerLv: 12, atkPerLv: 5, defPerLv: 1,
+    skills: [
+      { id:'attack', name:'Địa lôi', icon:'⚡', mp:4, type:'magic', power:1.0, desc:'Phép tấn công cơ bản' },
+      { id:'fireball', name:'Hỏa cầu', icon:'🔥', mp:15, type:'magic', power:2.0, desc:'Cầu lửa x2.0' },
+      { id:'heal', name:'Hồi phục', icon:'💚', mp:12, type:'heal', power:0.4, desc:'Hồi HP 40% ATK' },
+      { id:'blizzard', name:'Băng bão', icon:'❄️', mp:25, type:'magic', power:3.2, desc:'Bão tuyết x3.2, chance freeze' },
+    ]
+  },
+  rogue: {
+    name: 'Rogue', nameVi: 'Thích Khách', icon: '🗡️',
+    baseHP: 90, baseMP: 50, baseATK: 20, baseDEF: 7,
+    hpPerLv: 15, mpPerLv: 8, atkPerLv: 5, defPerLv: 1,
+    skills: [
+      { id:'attack', name:'Đâm', icon:'🗡️', mp:0, type:'physical', power:1.0, desc:'Đòn tấn công cơ bản' },
+      { id:'backstab', name:'Ám sát', icon:'🌑', mp:10, type:'physical', power:2.2, desc:'Crit cao x2.2' },
+      { id:'smoke', name:'Khói độc', icon:'💨', mp:8, type:'debuff', power:0, desc:'Giảm ATK địch 30%' },
+      { id:'combo', name:'Combo', icon:'⚡', mp:18, type:'physical', power:1.5, desc:'3 đòn liên tiếp x1.5 mỗi đòn' },
+    ]
+  }
+};
+
+const AREAS = [
+  { id:'forest', name:'Rừng Xanh', icon:'🌲', level:'Lv 1-3', minLv:1, enemies:['goblin','slime','wolf'] },
+  { id:'cave', name:'Hang Động', icon:'🌑', level:'Lv 3-6', minLv:3, enemies:['bat','golem','spider'] },
+  { id:'ruins', name:'Phế Tích', icon:'🏚️', level:'Lv 6-10', minLv:6, enemies:['skeleton','zombie','ghost'] },
+  { id:'castle', name:'Lâu Đài', icon:'🏰', level:'Lv 10+', minLv:10, enemies:['knight','dragon','demon'] },
+];
+
+const ENEMIES = {
+  goblin: { name:'Goblin', icon:'👺', hp:40, atk:8, def:2, xp:20, gold:10 },
+  slime: { name:'Slime', icon:'🟢', hp:30, atk:6, def:5, xp:15, gold:8 },
+  wolf: { name:'Sói Xám', icon:'🐺', hp:55, atk:12, def:3, xp:30, gold:15 },
+  bat: { name:'Dơi Quỷ', icon:'🦇', hp:50, atk:14, def:4, xp:35, gold:18 },
+  golem: { name:'Thổ Tinh', icon:'🪨', hp:100, atk:10, def:15, xp:50, gold:30 },
+  spider: { name:'Nhện Độc', icon:'🕷️', hp:65, atk:16, def:5, xp:40, gold:22 },
+  skeleton: { name:'Bộ Xương', icon:'💀', hp:80, atk:18, def:8, xp:60, gold:35 },
+  zombie: { name:'Xác Sống', icon:'🧟', hp:110, atk:15, def:6, xp:55, gold:32 },
+  ghost: { name:'Hồn Ma', icon:'👻', hp:70, atk:22, def:10, xp:70, gold:40 },
+  knight: { name:'Kỵ Sĩ Bóng Tối', icon:'⚔️', hp:150, atk:28, def:18, xp:100, gold:60 },
+  dragon: { name:'Rồng Đỏ', icon:'🐉', hp:200, atk:35, def:12, xp:150, gold:100 },
+  demon: { name:'Ác Ma', icon:'😈', hp:180, atk:40, def:20, xp:180, gold:120 },
+};
+
+const STORY_LINES = [
+  { speaker:'Vị Thần', art:'✨', text:'...Ngươi đã chết tại thế giới cũ. Nhưng ta thấy trong mắt ngươi còn lửa chưa tắt.' },
+  { speaker:'Vị Thần', art:'🌟', text:'Ta sẽ cho ngươi một cơ hội — tái sinh tại dị giới. Nhưng đây không phải nghỉ dưỡng. Đây là chiến trường.' },
+  { speaker:'Vị Thần', art:'⚡', text:'Ngươi sẽ bắt đầu từ con số không. Yếu ớt, vô danh. Nhưng tiềm năng của ngươi... vô hạn.' },
+  { speaker:'Vị Thần', art:'❤️', text:'Hãy nghe ta — mỗi sinh linh có HP (máu) và MP (năng lượng). HP về 0 là ngươi ngã xuống. MP dùng để thi triển kỹ năng, tự hồi sau mỗi lượt.' },
+  { speaker:'Vị Thần', art:'⚔️', text:'Chiến đấu theo lượt — ngươi ra đòn trước, rồi đến địch. Chọn kỹ năng phù hợp: tấn công, phòng thủ, hay hồi máu.' },
+  { speaker:'Vị Thần', art:'🛡️', text:'DEF (phòng thủ) giảm dame nhận vào. Kỹ năng Phòng Thủ sẽ nhân DEF lên 3 lần trong một lượt — dùng khi địch mạnh.' },
+  { speaker:'Vị Thần', art:'🏪', text:'Sau mỗi trận thắng, ngươi nhận gold. Mang đến Shop để mua vũ khí, giáp, nhẫn — trang bị tốt thay đổi cuộc chơi hoàn toàn.' },
+  { speaker:'Vị Thần', art:'🌅', text:'Đủ rồi. Lời nói không bằng trải nghiệm. Ta sẽ triệu hồi một Slime nhỏ — hãy tự tay cảm nhận chiến đấu.' },
+];
+
+const STORY_TUTORIAL_START = 7; // index của slide cuối → trigger tutorial battle
+
+// ============ SHOP DATA ============
+const SHOP_ITEMS = [
+  // Vũ khí
+  { id:'iron_sword', slot:'weapon', name:'Kiếm Sắt', icon:'⚔️', desc:'Vũ khí cơ bản của dị giới', bonus:'+8 ATK', atk:8, def:0, hp:0, mp:0, price:50 },
+  { id:'steel_sword', slot:'weapon', name:'Kiếm Thép', icon:'🗡️', desc:'Lưỡi kiếm sắc bén', bonus:'+18 ATK', atk:18, def:0, hp:0, mp:0, price:150 },
+  { id:'magic_staff', slot:'weapon', name:'Trượng Phép', icon:'🪄', desc:'Khuếch đại phép thuật', bonus:'+12 ATK, +20 MP', atk:12, def:0, hp:0, mp:20, price:180 },
+  { id:'dark_blade', slot:'weapon', name:'Kiếm Tối', icon:'🌑', desc:'Hấp thụ bóng tối', bonus:'+25 ATK', atk:25, def:0, hp:0, mp:0, price:300 },
+  // Giáp
+  { id:'leather_armor', slot:'armor', name:'Giáp Da', icon:'🧥', desc:'Nhẹ nhàng, linh hoạt', bonus:'+6 DEF', atk:0, def:6, hp:0, mp:0, price:60 },
+  { id:'iron_armor', slot:'armor', name:'Giáp Sắt', icon:'🛡️', desc:'Phòng thủ vững chắc', bonus:'+14 DEF, +20 HP', atk:0, def:14, hp:20, mp:0, price:200 },
+  { id:'mage_robe', slot:'armor', name:'Áo Pháp Sư', icon:'👘', desc:'Tăng mana tối đa', bonus:'+5 DEF, +40 MP', atk:0, def:5, hp:0, mp:40, price:220 },
+  // Nhẫn
+  { id:'hp_ring', slot:'ring', name:'Nhẫn Sinh Lực', icon:'💍', desc:'Tăng máu tối đa', bonus:'+40 HP', atk:0, def:0, hp:40, mp:0, price:80 },
+  { id:'power_ring', slot:'ring', name:'Nhẫn Sức Mạnh', icon:'💎', desc:'Tăng sức tấn công', bonus:'+10 ATK', atk:10, def:0, hp:0, mp:0, price:120 },
+  { id:'balance_ring', slot:'ring', name:'Nhẫn Cân Bằng', icon:'🔮', desc:'Tăng mọi chỉ số', bonus:'+6 ATK, +6 DEF, +20 HP', atk:6, def:6, hp:20, mp:0, price:250 },
+];
+
+
+let player = {};
+let enemy = null;
+let currentArea = null;
+let storyIdx = 0;
+let isPlayerTurn = true;
+let isDefending = false;
+let enemyDebuff = 0; // % reduction
+let resultRewards = {};
+let battleTimeout = null;
+
+// ============ NAVIGATION ============
+function goTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + screenId).classList.add('active');
+}
+
+// ============ INIT PLAYER ============
+function initPlayer(name, cls) {
+  const c = CLASSES[cls];
+  player = {
+    name, cls,
+    level: 1, xp: 0, xpNext: 100,
+    gold: 0,
+    hp: c.baseHP, maxHP: c.baseHP,
+    mp: c.baseMP, maxMP: c.baseMP,
+    atk: c.baseATK, def: c.baseDEF,
+    baseAtk: c.baseATK, baseDef: c.baseDEF,
+    baseMaxHP: c.baseHP, baseMaxMP: c.baseMP,
+    equip: { weapon: null, armor: null, ring: null },
+    owned: [],
+  };
+}
+
+function levelUp() {
+  player.level++;
+  player.xpNext = Math.floor(player.xpNext * 1.5);
+  recalcStats();
+  // Hồi full HP/MP khi lên cấp
+  player.hp = player.maxHP;
+  player.mp = player.maxMP;
+  addLog(`✨ Lên cấp! Bây giờ là Lv.${player.level}!`, 'sys');
+}
+
+// ============ NAME SCREEN ============
+function confirmName() {
+  const v = document.getElementById('name-input').value.trim();
+  if (!v) { document.getElementById('name-input').placeholder = 'Nhập tên đi bạn ơi...'; return; }
+  player.pendingName = v;
+  goTo('class');
+}
+
+// ============ CLASS SELECT ============
+function selectClass(cls) {
+  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  setTimeout(() => {
+    initPlayer(player.pendingName, cls);
+    storyIdx = 0;
+    showStory();
+    goTo('story');
+  }, 300);
+}
+
+// ============ STORY ============
+let typeInterval = null;
+let currentTypeText = '';
+let typeElId = '';
+
+function showStory() {
+  const s = STORY_LINES[storyIdx];
+  document.getElementById('story-art').textContent = s.art;
+  document.getElementById('story-speaker').textContent = s.speaker;
+  typeText('story-text', s.text);
+}
+
+function typeText(elId, text) {
+  if (typeInterval) { clearInterval(typeInterval); typeInterval = null; }
+  currentTypeText = text;
+  typeElId = elId;
+  const el = document.getElementById(elId);
+  el.textContent = '';
+  let i = 0;
+  typeInterval = setInterval(() => {
+    i++;
+    el.textContent = text.slice(0, i);
+    if (i >= text.length) {
+      clearInterval(typeInterval);
+      typeInterval = null;
+    }
+  }, 28);
+}
+
+function nextStory() {
+  if (typeInterval) {
+    clearInterval(typeInterval);
+    typeInterval = null;
+    document.getElementById(typeElId).textContent = currentTypeText;
+    return;
+  }
+  storyIdx++;
+  if (storyIdx >= STORY_LINES.length) {
+    // Slide cuối → vào tutorial battle
+    startTutorialBattle();
+  } else {
+    showStory();
+  }
+}
+
+// ============ EQUIP / STATS ============
+function recalcStats() {
+  const c = CLASSES[player.cls];
+  const lv = player.level - 1;
+  let baseAtk = c.baseATK + lv * c.atkPerLv;
+  let baseDef = c.baseDEF + lv * c.defPerLv;
+  let bonusHP = 0, bonusMP = 0, bonusAtk = 0, bonusDef = 0;
+  ['weapon','armor','ring'].forEach(slot => {
+    const item = player.equip[slot];
+    if (item) { bonusAtk += item.atk; bonusDef += item.def; bonusHP += item.hp; bonusMP += item.mp; }
+  });
+  player.atk = baseAtk + bonusAtk;
+  player.def = baseDef + bonusDef;
+  const baseMaxHP = c.baseHP + lv * c.hpPerLv;
+  const baseMaxMP = c.baseMP + lv * c.mpPerLv;
+  const prevMaxHP = player.maxHP;
+  const prevMaxMP = player.maxMP;
+  player.maxHP = baseMaxHP + bonusHP;
+  player.maxMP = baseMaxMP + bonusMP;
+  // scale current HP/MP proportionally
+  player.hp = Math.min(player.hp + (player.maxHP - prevMaxHP), player.maxHP);
+  player.mp = Math.min(player.mp + (player.maxMP - prevMaxMP), player.maxMP);
+}
+
+function openStats() {
+  const mpRegen = Math.floor(player.maxMP * 0.12);
+  const slots = [
+    { icon:'❤️', label:'HP', val:`${player.hp}/${player.maxHP}`, sub:'' },
+    { icon:'💧', label:'MP', val:`${player.mp}/${player.maxMP}`, sub:`+${mpRegen}/lượt` },
+    { icon:'⚔️', label:'ATK', val:player.atk, sub:'sát thương' },
+    { icon:'🛡️', label:'DEF', val:player.def, sub:'giảm dame' },
+    { icon:'⭐', label:'LV', val:player.level, sub:`${player.xp}/${player.xpNext} XP` },
+    { icon:'💰', label:'Gold', val:player.gold, sub:'tích lũy' },
+  ];
+  document.getElementById('stats-grid').innerHTML = slots.map(s => `
+    <div class="stat-card">
+      <div class="s-icon">${s.icon}</div>
+      <div class="s-label">${s.label}</div>
+      <div class="s-val">${s.val}</div>
+      ${s.sub ? `<div class="s-sub">${s.sub}</div>` : ''}
+    </div>
+  `).join('');
+
+  const slotNames = { weapon:'🗡️ Vũ khí', armor:'🛡️ Giáp', ring:'💍 Nhẫn' };
+  document.getElementById('equip-slots').innerHTML = ['weapon','armor','ring'].map(slot => {
+    const item = player.equip[slot];
+    return `<div class="equip-row">
+      <div class="equip-icon">${item ? item.icon : '—'}</div>
+      <div class="equip-info">
+        <div class="equip-slot-name">${slotNames[slot]}</div>
+        <div class="equip-item-name">${item ? item.name : 'Trống'}</div>
+        ${item ? `<div class="equip-bonus">${item.bonus}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('modal-stats').classList.add('active');
+}
+
+function openShop() {
+  document.getElementById('shop-gold').textContent = `💰 Gold: ${player.gold}`;
+  document.getElementById('shop-items').innerHTML = SHOP_ITEMS.map(item => {
+    const isOwned = player.owned.includes(item.id);
+    const isEquipped = player.equip[item.slot]?.id === item.id;
+    const cantAfford = !isOwned && player.gold < item.price;
+    let cls = isOwned ? 'owned' : (cantAfford ? 'cant-afford' : '');
+    let priceEl = isOwned
+      ? `<div class="shop-item-price owned-tag">${isEquipped ? '✅ Đang mặc' : '✔ Đã mua'}</div>`
+      : `<div class="shop-item-price">${item.price}💰</div>`;
+    return `<div class="shop-item ${cls}" onclick="buyOrEquip('${item.id}')">
+      <div class="shop-item-icon">${item.icon}</div>
+      <div class="shop-item-info">
+        <div class="shop-item-name">${item.name}</div>
+        <div class="shop-item-desc">${item.desc}</div>
+        <div class="shop-item-bonus">${item.bonus}</div>
+      </div>
+      ${priceEl}
+    </div>`;
+  }).join('');
+  document.getElementById('modal-shop').classList.add('active');
+}
+
+function buyOrEquip(itemId) {
+  const item = SHOP_ITEMS.find(i => i.id === itemId);
+  if (!item) return;
+  if (player.owned.includes(itemId)) {
+    // Trang bị / tháo
+    if (player.equip[item.slot]?.id === itemId) {
+      player.equip[item.slot] = null;
+    } else {
+      player.equip[item.slot] = item;
+    }
+    recalcStats();
+    openShop();
+    updateMapBars();
+    return;
+  }
+  if (player.gold < item.price) return;
+  player.gold -= item.price;
+  player.owned.push(itemId);
+  player.equip[item.slot] = item;
+  recalcStats();
+  openShop();
+  updateMapBars();
+}
+
+function closeModal(name) {
+  document.getElementById('modal-' + name).classList.remove('active');
+}
+
+// ============ MAP ============
+function showMap() {
+  document.getElementById('map-player-name').textContent = player.name;
+  document.getElementById('map-class-badge').textContent = CLASSES[player.cls].nameVi;
+  document.getElementById('map-level-badge').textContent = `Lv.${player.level}`;
+  updateMapBars();
+
+  const grid = document.getElementById('map-areas');
+  grid.innerHTML = '';
+  AREAS.forEach(area => {
+    const locked = player.level < area.minLv;
+    const card = document.createElement('div');
+    card.className = 'area-card' + (locked ? ' locked' : '');
+    card.innerHTML = `<div class="area-icon">${area.icon}</div><div class="area-name">${area.name}</div><div class="area-level">${area.level}</div>`;
+    if (!locked) card.onclick = () => startAreaBattle(area);
+    grid.appendChild(card);
+  });
+}
+
+function updateMapBars() {
+  const hp = player.hp / player.maxHP * 100;
+  const xp = player.xp / player.xpNext * 100;
+  document.getElementById('map-hp-bar').style.width = hp + '%';
+  document.getElementById('map-hp-val').textContent = `${player.hp}/${player.maxHP}`;
+  document.getElementById('map-xp-bar').style.width = xp + '%';
+  document.getElementById('map-xp-val').textContent = `${player.xp}/${player.xpNext}`;
+}
+
+// ============ BATTLE ============
+function startAreaBattle(area) {
+  currentArea = area;
+  const eKey = area.enemies[Math.floor(Math.random() * area.enemies.length)];
+  const eData = ENEMIES[eKey];
+  // Scale enemy to area level
+  const scale = 1 + (area.minLv - 1) * 0.3;
+  enemy = {
+    ...eData,
+    hp: Math.floor(eData.hp * scale),
+    maxHP: Math.floor(eData.hp * scale),
+    atk: Math.floor(eData.atk * scale),
+    def: eData.def,
+    xp: Math.floor(eData.xp * scale),
+    gold: Math.floor(eData.gold * scale),
+  };
+
+  isPlayerTurn = true;
+  isDefending = false;
+  enemyDebuff = 0;
+
+  // Update battle UI
+  document.getElementById('battle-player-name').textContent = player.name;
+  document.getElementById('battle-class-badge').textContent = CLASSES[player.cls].nameVi;
+  document.getElementById('battle-level-badge').textContent = `Lv.${player.level}`;
+  document.getElementById('enemy-art').textContent = enemy.icon;
+  document.getElementById('enemy-name').textContent = enemy.name;
+
+  updateBattleBars();
+  updateEnemyBar();
+
+  const log = document.getElementById('battle-log');
+  log.innerHTML = `<div class="log-entry sys">⚔️ ${enemy.name} xuất hiện!</div>`;
+
+  buildSkills();
+  setTurnUI(true);
+  goTo('game');
+}
+
+function buildSkills() {
+  const grid = document.getElementById('skills-grid');
+  grid.innerHTML = '';
+  CLASSES[player.cls].skills.forEach(sk => {
+    const btn = document.createElement('div');
+    btn.className = `skill-btn ${player.cls}`;
+    btn.id = `skill-${sk.id}`;
+    btn.innerHTML = `<span class="skill-icon">${sk.icon}</span><span class="skill-name">${sk.name}</span><span class="skill-mp">${sk.mp > 0 ? sk.mp + ' MP' : 'Miễn phí'}</span>`;
+    btn.onclick = () => useSkill(sk);
+    grid.appendChild(btn);
+  });
+}
+
+function setTurnUI(playerTurn) {
+  isPlayerTurn = playerTurn;
+  const indicator = document.getElementById('turn-indicator');
+  if (playerTurn) {
+    indicator.innerHTML = 'Lượt của <span>bạn</span>';
+    document.querySelectorAll('.skill-btn').forEach(b => b.removeAttribute('disabled'));
+    // Disable skills with not enough MP
+    CLASSES[player.cls].skills.forEach(sk => {
+      if (player.mp < sk.mp) {
+        const b = document.getElementById(`skill-${sk.id}`);
+        if (b) b.setAttribute('disabled', true);
+      }
+    });
+  } else {
+    indicator.innerHTML = `Lượt của <span style="color:var(--red)">${enemy ? enemy.name : 'địch'}</span>`;
+    document.querySelectorAll('.skill-btn').forEach(b => b.setAttribute('disabled', true));
+  }
+}
+
+function updateBattleBars() {
+  document.getElementById('hp-bar').style.width = (player.hp / player.maxHP * 100) + '%';
+  document.getElementById('hp-val').textContent = `${player.hp}/${player.maxHP}`;
+  document.getElementById('mp-bar').style.width = (player.mp / player.maxMP * 100) + '%';
+  document.getElementById('mp-val').textContent = `${player.mp}/${player.maxMP}`;
+}
+
+function updateEnemyBar() {
+  const pct = Math.max(0, enemy.hp / enemy.maxHP * 100);
+  document.getElementById('enemy-hp-bar').style.width = pct + '%';
+  document.getElementById('enemy-hp-text').textContent = `${Math.max(0,enemy.hp)} / ${enemy.maxHP}`;
+}
+
+function addLog(msg, type = '') {
+  const log = document.getElementById('battle-log');
+  const d = document.createElement('div');
+  d.className = 'log-entry ' + type;
+  d.textContent = msg;
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+}
+
+function showDmgFloat(el, val, type='') {
+  const f = document.createElement('div');
+  f.className = 'dmg-float ' + type;
+  f.textContent = (type === 'heal-f' ? '+' : '-') + val;
+  const rect = el.getBoundingClientRect();
+  f.style.left = (rect.left + rect.width/2 - 20) + 'px';
+  f.style.top = (rect.top + window.scrollY) + 'px';
+  f.style.position = 'fixed';
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 900);
+}
+
+function useSkill(sk) {
+  if (!isPlayerTurn) return;
+  if (player.mp < sk.mp) return;
+  player.mp -= sk.mp;
+
+  setTurnUI(false);
+  isDefending = false;
+
+  let dmg = 0;
+  if (sk.type === 'physical') {
+    const base = Math.floor(player.atk * sk.power);
+    const variance = Math.floor(base * 0.15);
+    dmg = base + Math.floor(Math.random() * variance * 2) - variance;
+    const isCrit = (player.cls === 'rogue' && sk.id !== 'attack') && Math.random() < 0.35;
+    if (isCrit) { dmg = Math.floor(dmg * 1.8); addLog(`💥 Chí mạng!`, 'sys'); }
+    if (sk.id === 'reckless') { const selfDmg = Math.floor(player.atk * 0.3); player.hp = Math.max(1, player.hp - selfDmg); addLog(`😤 Tử chiến! Nhận ${selfDmg} dame phản.`, 'dmg'); }
+    if (sk.id === 'combo') {
+      // 3 hits
+      let total = 0;
+      for (let i = 0; i < 3; i++) {
+        const h = Math.max(1, Math.floor(player.atk * 1.5) - enemy.def);
+        total += h;
+      }
+      dmg = total;
+      addLog(`⚡ Combo 3 đòn! Tổng ${dmg} dame!`, 'dmg');
+    } else {
+      const netDmg = Math.max(1, dmg - enemy.def);
+      enemy.hp -= netDmg;
+      addLog(`${sk.icon} ${sk.name}: Gây ${netDmg} dame cho ${enemy.name}!`, 'dmg');
+      showDmgFloat(document.getElementById('enemy-art'), netDmg);
+      document.getElementById('enemy-section').classList.add('shake');
+      setTimeout(() => document.getElementById('enemy-section').classList.remove('shake'), 300);
+      updateEnemyBar();
+      updateBattleBars();
+      checkEnemyDead(); return;
+    }
+    enemy.hp -= Math.max(1, dmg - enemy.def);
+    updateEnemyBar();
+    updateBattleBars();
+    checkEnemyDead(); return;
+  }
+
+  if (sk.type === 'magic') {
+    const base = Math.floor(player.atk * sk.power);
+    dmg = base + Math.floor(Math.random() * 8) - 4;
+    const netDmg = Math.max(1, dmg);
+    enemy.hp -= netDmg;
+    addLog(`${sk.icon} ${sk.name}: Phép ${netDmg} dame lên ${enemy.name}!`, 'dmg');
+    showDmgFloat(document.getElementById('enemy-art'), netDmg);
+    if (sk.id === 'blizzard' && Math.random() < 0.3) addLog('❄️ Địch bị đóng băng 1 lượt!', 'sys');
+    document.getElementById('enemy-section').classList.add('shake');
+    setTimeout(() => document.getElementById('enemy-section').classList.remove('shake'), 300);
+    updateEnemyBar();
+    updateBattleBars();
+    checkEnemyDead(); return;
+  }
+
+  if (sk.type === 'heal') {
+    const healAmt = Math.floor(player.atk * sk.power) + Math.floor(Math.random() * 10);
+    player.hp = Math.min(player.maxHP, player.hp + healAmt);
+    addLog(`${sk.icon} Hồi phục +${healAmt} HP!`, 'heal');
+    showDmgFloat(document.getElementById('hp-bar'), healAmt, 'heal-f');
+    updateBattleBars();
+    setTimeout(() => enemyTurn(), 800);
+    return;
+  }
+
+  if (sk.type === 'defend') {
+    isDefending = true;
+    addLog(`🛡️ Phòng thủ! Giảm 60% dame lượt này.`, 'sys');
+    setTimeout(() => enemyTurn(), 800);
+    return;
+  }
+
+  if (sk.type === 'debuff') {
+    enemyDebuff = 0.3;
+    addLog(`${sk.icon} ${enemy.name} bị yếu! ATK giảm 30%.`, 'sys');
+    setTimeout(() => enemyTurn(), 800);
+    return;
+  }
+}
+
+function checkEnemyDead() {
+  if (enemy.hp <= 0) {
+    enemy.hp = 0;
+    updateEnemyBar();
+    setTimeout(() => showWin(), 600);
+  } else {
+    setTimeout(() => enemyTurn(), 900);
+  }
+}
+
+function enemyTurn() {
+  document.getElementById('turn-indicator').innerHTML = `Lượt của <span style="color:var(--red)">${enemy.name}</span>`;
+  setTimeout(() => {
+    let eAtk = Math.floor(enemy.atk * (1 - enemyDebuff));
+    const eDmg = Math.max(1, eAtk - Math.floor(player.def * (isDefending ? 3 : 1)));
+    player.hp = Math.max(0, player.hp - eDmg);
+    addLog(`${enemy.icon} ${enemy.name} tấn công! Gây ${eDmg} dame.`, 'enemy-dmg');
+    showDmgFloat(document.getElementById('hp-bar'), eDmg);
+    document.getElementById('hp-bar').parentElement.parentElement.classList.add('shake');
+    setTimeout(() => document.getElementById('hp-bar').parentElement.parentElement.classList.remove('shake'), 300);
+
+    // Regen MP
+    player.mp = Math.min(player.maxMP, player.mp + Math.floor(player.maxMP * 0.12));
+    enemyDebuff = 0;
+    updateBattleBars();
+
+    if (player.hp <= 0) {
+      setTimeout(() => showLose(), 500);
+    } else {
+      setTurnUI(true);
+    }
+  }, 400);
+}
+
+function showWin() {
+  const wasTutorial = isTutorial;
+  endTutorial();
+  player.xp += enemy.xp;
+  player.gold += enemy.gold;
+  let lvUp = false;
+  while (player.xp >= player.xpNext) {
+    player.xp -= player.xpNext;
+    levelUp();
+    lvUp = true;
+  }
+
+  if (wasTutorial) {
+    document.getElementById('result-art').textContent = '🌟';
+    document.getElementById('result-title').className = 'result-title win';
+    document.getElementById('result-title').textContent = 'Hoàn thành!';
+    document.getElementById('result-desc').textContent = 'Ngươi đã hạ gục Slime Tutorial. Vị Thần gật đầu hài lòng. Cuộc phiêu lưu thật sự bắt đầu!';
+    document.getElementById('result-rewards').innerHTML = `
+      <div class="reward-row"><span class="reward-label">Gold nhận được</span><span class="reward-val">+${enemy.gold} 💰</span></div>
+      <div class="reward-row"><span class="reward-label" style="color:var(--purple)">Tutorial</span><span class="reward-val" style="color:var(--purple)">Hoàn thành ✓</span></div>
+    `;
+    document.getElementById('result-btn').textContent = 'Vào thế giới →';
+    goTo('result');
+    return;
+  }
+
+  resultRewards = { xp: enemy.xp, gold: enemy.gold, lvUp };
+  document.getElementById('result-art').textContent = lvUp ? '⬆️' : '🏆';
+  document.getElementById('result-title').className = 'result-title win';
+  document.getElementById('result-title').textContent = lvUp ? 'Lên Cấp!' : 'Chiến Thắng!';
+  document.getElementById('result-desc').textContent = `${enemy.name} đã bị đánh bại!`;
+  document.getElementById('result-rewards').innerHTML = `
+    <div class="reward-row"><span class="reward-label">XP nhận được</span><span class="reward-val">+${enemy.xp}</span></div>
+    <div class="reward-row"><span class="reward-label">Gold nhận được</span><span class="reward-val">+${enemy.gold} 💰</span></div>
+    ${lvUp ? `<div class="reward-row"><span class="reward-label" style="color:var(--gold)">Level mới</span><span class="reward-val">Lv.${player.level}!</span></div>` : ''}
+  `;
+  document.getElementById('result-btn').textContent = 'Quay về bản đồ';
+  goTo('result');
+}
+
+function showLose() {
+  document.getElementById('result-art').textContent = '💀';
+  document.getElementById('result-title').className = 'result-title lose';
+  document.getElementById('result-title').textContent = 'Thất Bại...';
+  document.getElementById('result-desc').textContent = `${player.name} đã ngã xuống. Nhưng cuộc phiêu lưu chưa kết thúc — hãy đứng dậy!`;
+  document.getElementById('result-rewards').innerHTML = `
+    <div class="reward-row"><span class="reward-label">HP còn lại</span><span class="reward-val" style="color:var(--red)">0</span></div>
+    <div class="reward-row"><span class="reward-label">HP hồi phục</span><span class="reward-val">30%</span></div>
+  `;
+  player.hp = Math.floor(player.maxHP * 0.3);
+  player.mp = player.maxMP;
+  document.getElementById('result-btn').textContent = 'Tiếp tục...';
+  goTo('result');
+}
+
+function afterBattle() {
+  showMap();
+  goTo('map');
+}
+
+function fleeBattle() {
+  player.hp = Math.max(1, player.hp - Math.floor(player.maxHP * 0.1));
+  player.mp = Math.min(player.maxMP, player.mp + 10);
+  showMap();
+  goTo('map');
+}
+
+// ============ TUTORIAL BATTLE ============
+let isTutorial = false;
+let tutStep = 0;
+
+const TUT_STEPS = [
+  {
+    targetId: 'enemy-section',
+    arrow: '👆 KẺ ĐỊCH',
+    text: 'Đây là Slime Tutorial — kẻ địch đầu tiên của ngươi. Thanh đỏ phía dưới là HP của nó. Đưa HP về 0 để thắng!',
+  },
+  {
+    targetId: 'hp-bar',
+    arrow: '❤️ HP & MP CỦA NGƯƠI',
+    text: 'Thanh đỏ là HP (máu) — về 0 là thua. Thanh xanh là MP — dùng để thi triển kỹ năng, tự hồi mỗi lượt.',
+  },
+  {
+    targetId: 'battle-log',
+    arrow: '📜 NHẬT KÝ CHIẾN ĐẤU',
+    text: 'Mọi diễn biến trận đánh hiện ở đây — dame gây ra, dame nhận, hiệu ứng kỹ năng. Theo dõi để đưa ra quyết định!',
+  },
+  {
+    targetId: 'skills-grid',
+    arrow: '⚔️ KỸ NĂNG',
+    text: 'Đây là các kỹ năng của ngươi. Số MP bên dưới là chi phí. Skill màu xám là không đủ MP. Hãy chọn một kỹ năng để tấn công Slime!',
+    isLast: true,
+  },
+];
+
+function startTutorialBattle() {
+  isTutorial = true;
+  tutStep = 0;
+
+  // Setup tutorial slime — rất yếu
+  enemy = {
+    name: 'Slime Tutorial', icon: '🟢',
+    hp: 20, maxHP: 20,
+    atk: 2, def: 0,
+    xp: 0, gold: 30,
+  };
+
+  isPlayerTurn = true;
+  isDefending = false;
+  enemyDebuff = 0;
+
+  document.getElementById('battle-player-name').textContent = player.name;
+  document.getElementById('battle-class-badge').textContent = CLASSES[player.cls].nameVi;
+  document.getElementById('battle-level-badge').textContent = `Lv.${player.level}`;
+  document.getElementById('enemy-art').textContent = enemy.icon;
+  document.getElementById('enemy-name').textContent = enemy.name;
+
+  updateBattleBars();
+  updateEnemyBar();
+
+  const log = document.getElementById('battle-log');
+  log.innerHTML = `<div class="log-entry sys">✨ Vị Thần triệu hồi một Slime yếu để luyện tập!</div>`;
+
+  buildSkills();
+  // Disable skill buttons during tutorial tooltip
+  document.querySelectorAll('.skill-btn').forEach(b => b.setAttribute('disabled', true));
+
+  goTo('game');
+
+  // Delay nhỏ để screen render xong rồi mới show tooltip
+  setTimeout(() => showTutStep(0), 400);
+}
+
+function showTutStep(idx) {
+  const step = TUT_STEPS[idx];
+  const overlay = document.getElementById('tut-overlay');
+  const highlight = document.getElementById('tut-highlight');
+  const bubble = document.getElementById('tut-bubble');
+
+  overlay.classList.add('active');
+
+  // Highlight target element
+  const target = document.getElementById(step.targetId);
+  if (target) {
+    const rect = target.getBoundingClientRect();
+    const pad = 6;
+    highlight.style.left = (rect.left - pad) + 'px';
+    highlight.style.top = (rect.top + window.scrollY - pad) + 'px';
+    highlight.style.width = (rect.width + pad * 2) + 'px';
+    highlight.style.height = (rect.height + pad * 2) + 'px';
+  }
+
+  // Position bubble — trên hoặc dưới target
+  const targetRect = target ? target.getBoundingClientRect() : { top: 200, left: 20, bottom: 300 };
+  const bubbleTop = targetRect.bottom + 16 < window.innerHeight - 160
+    ? targetRect.bottom + window.scrollY + 16
+    : targetRect.top + window.scrollY - 160;
+
+  bubble.style.top = Math.max(8, bubbleTop) + 'px';
+  bubble.style.left = '16px';
+  bubble.style.right = '16px';
+  bubble.style.maxWidth = 'calc(100% - 32px)';
+
+  document.getElementById('tut-arrow').textContent = '💡 ' + step.arrow;
+  document.getElementById('tut-text').textContent = step.text;
+  document.getElementById('tut-step-ind').textContent = `${idx + 1} / ${TUT_STEPS.length}`;
+  document.getElementById('tut-btn').textContent = step.isLast ? 'Bắt đầu chiến đấu! ⚔️' : 'Hiểu rồi →';
+}
+
+function nextTutStep() {
+  tutStep++;
+  if (tutStep >= TUT_STEPS.length) {
+    // Đóng tutorial, mở skill buttons
+    document.getElementById('tut-overlay').classList.remove('active');
+    setTurnUI(true);
+  } else {
+    showTutStep(tutStep);
+  }
+}
+
+function endTutorial() {
+  isTutorial = false;
+  document.getElementById('tut-overlay').classList.remove('active');
+}
+
+function resetGame() {
+  player = {};
+  enemy = null;
+  typeInterval && clearInterval(typeInterval);
+  typeInterval = null;
+  document.getElementById('name-input').value = '';
+}
+</script>
+</body>
+</html>
