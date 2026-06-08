@@ -873,6 +873,7 @@ let storyIdx = 0;
 let isPlayerTurn = true;
 let isDefending = false;
 let enemyDebuff = 0; // % reduction
+let enemyFrozen = false; // skip enemy turn 1 lượt
 let resultRewards = {};
 let battleTimeout = null;
 
@@ -1124,7 +1125,7 @@ function startAreaBattle(area) {
     hp: Math.floor(eData.hp * scale),
     maxHP: Math.floor(eData.hp * scale),
     atk: Math.floor(eData.atk * scale),
-    def: eData.def,
+    def: Math.floor(eData.def * scale),
     xp: Math.floor(eData.xp * scale),
     gold: Math.floor(eData.gold * scale),
   };
@@ -1132,6 +1133,7 @@ function startAreaBattle(area) {
   isPlayerTurn = true;
   isDefending = false;
   enemyDebuff = 0;
+  enemyFrozen = false;
 
   // Update battle UI
   document.getElementById('battle-player-name').textContent = player.name;
@@ -1234,14 +1236,20 @@ function useSkill(sk) {
     if (isCrit) { dmg = Math.floor(dmg * 1.8); addLog(`💥 Chí mạng!`, 'sys'); }
     if (sk.id === 'reckless') { const selfDmg = Math.floor(player.atk * 0.3); player.hp = Math.max(1, player.hp - selfDmg); addLog(`😤 Tử chiến! Nhận ${selfDmg} dame phản.`, 'dmg'); }
     if (sk.id === 'combo') {
-      // 3 hits
+      // 3 hits riêng biệt, mỗi đòn trừ def
       let total = 0;
       for (let i = 0; i < 3; i++) {
         const h = Math.max(1, Math.floor(player.atk * 1.5) - enemy.def);
         total += h;
       }
-      dmg = total;
-      addLog(`⚡ Combo 3 đòn! Tổng ${dmg} dame!`, 'dmg');
+      enemy.hp -= total;
+      addLog(`⚡ Combo 3 đòn! Tổng ${total} dame cho ${enemy.name}!`, 'dmg');
+      showDmgFloat(document.getElementById('enemy-art'), total);
+      document.getElementById('enemy-section').classList.add('shake');
+      setTimeout(() => document.getElementById('enemy-section').classList.remove('shake'), 300);
+      updateEnemyBar();
+      updateBattleBars();
+      checkEnemyDead(); return;
     } else {
       const netDmg = Math.max(1, dmg - enemy.def);
       enemy.hp -= netDmg;
@@ -1253,10 +1261,6 @@ function useSkill(sk) {
       updateBattleBars();
       checkEnemyDead(); return;
     }
-    enemy.hp -= Math.max(1, dmg - enemy.def);
-    updateEnemyBar();
-    updateBattleBars();
-    checkEnemyDead(); return;
   }
 
   if (sk.type === 'magic') {
@@ -1266,7 +1270,10 @@ function useSkill(sk) {
     enemy.hp -= netDmg;
     addLog(`${sk.icon} ${sk.name}: Phép ${netDmg} dame lên ${enemy.name}!`, 'dmg');
     showDmgFloat(document.getElementById('enemy-art'), netDmg);
-    if (sk.id === 'blizzard' && Math.random() < 0.3) addLog('❄️ Địch bị đóng băng 1 lượt!', 'sys');
+    if (sk.id === 'blizzard' && Math.random() < 0.3) {
+      enemyFrozen = true;
+      addLog('❄️ Địch bị đóng băng! Bỏ qua lượt tấn công.', 'sys');
+    }
     document.getElementById('enemy-section').classList.add('shake');
     setTimeout(() => document.getElementById('enemy-section').classList.remove('shake'), 300);
     updateEnemyBar();
@@ -1312,6 +1319,17 @@ function checkEnemyDead() {
 function enemyTurn() {
   document.getElementById('turn-indicator').innerHTML = `Lượt của <span style="color:var(--red)">${enemy.name}</span>`;
   setTimeout(() => {
+    // Frozen: bỏ qua tấn công, chỉ hồi MP
+    if (enemyFrozen) {
+      enemyFrozen = false;
+      enemyDebuff = 0;
+      addLog(`❄️ ${enemy.name} vẫn đang đóng băng, không thể hành động!`, 'sys');
+      player.mp = Math.min(player.maxMP, player.mp + Math.floor(player.maxMP * 0.12));
+      updateBattleBars();
+      setTurnUI(true);
+      return;
+    }
+
     let eAtk = Math.floor(enemy.atk * (1 - enemyDebuff));
     const eDmg = Math.max(1, eAtk - Math.floor(player.def * (isDefending ? 3 : 1)));
     player.hp = Math.max(0, player.hp - eDmg);
@@ -1394,8 +1412,15 @@ function afterBattle() {
 }
 
 function fleeBattle() {
-  player.hp = Math.max(1, player.hp - Math.floor(player.maxHP * 0.1));
+  const fleeDmg = Math.floor(player.maxHP * 0.1);
+  player.hp = Math.max(0, player.hp - fleeDmg);
   player.mp = Math.min(player.maxMP, player.mp + 10);
+  if (player.hp <= 0) {
+    player.hp = Math.floor(player.maxHP * 0.3);
+    player.mp = player.maxMP;
+    showLose();
+    return;
+  }
   showMap();
   goTo('map');
 }
