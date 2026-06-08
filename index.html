@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>異世界転生 · Isekai RPG</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Noto+Sans+JP:wght@300;400;700&family=Be+Vietnam+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div id="app">
+
+  <!-- TITLE -->
+  <div class="screen active" id="screen-title">
+    <div class="title-jp">異世界転生 RPG</div>
+    <div class="title-art">⚔️</div>
+    <div class="title-main">ISEKAI<br>CHRONICLES</div>
+    <div class="title-sub">Biên niên sử dị giới</div>
+    <div style="font-size:12px;color:var(--dim);line-height:1.8;max-width:280px;text-align:center">
+      Bạn đã chết. Nhưng câu chuyện chưa kết thúc —<br>một thế giới mới đang chờ đợi...
+    </div>
+    <button class="btn-start" onclick="goTo('name')">▶ BẮT ĐẦU</button>
+  </div>
+
+  <!-- NAME -->
+  <div class="screen" id="screen-name">
+    <div class="title-art" style="font-size:50px">📜</div>
+    <div class="screen-title">Ngươi là ai?</div>
+    <div class="screen-desc">Vị thần tái sinh hỏi tên ngươi trước khi ban phép màu...</div>
+    <input class="name-input" id="name-input" type="text" placeholder="Nhập tên nhân vật..." maxlength="16">
+    <button class="btn btn-primary" onclick="confirmName()">Xác nhận</button>
+  </div>
+
+  <!-- CLASS -->
+  <div class="screen" id="screen-class">
+    <div style="text-align:center;margin-bottom:4px">
+      <div class="screen-title">Chọn Nghề Nghiệp</div>
+      <div style="font-size:12px;color:var(--dim)">Vị thần trao cho ngươi một sức mạnh...</div>
+    </div>
+    <div class="class-cards">
+      <div class="class-card" onclick="selectClass('warrior')">
+        <div class="class-icon">⚔️</div>
+        <div class="class-info">
+          <div class="class-name">Warrior</div>
+          <div class="class-name-vi">Kiếm Sĩ</div>
+          <div class="class-desc">Chiến binh mạnh mẽ, HP cao, đòn đánh nặng. Bắt đầu yếu nhưng khi đủ level sẽ trở thành bất khả chiến bại.</div>
+          <div class="class-stats">
+            <span class="stat-tag hp">HP: Cao</span>
+            <span class="stat-tag atk">ATK: Cao</span>
+            <span class="stat-tag mp">MP: Thấp</span>
+          </div>
+        </div>
+      </div>
+      <div class="class-card" onclick="selectClass('mage')">
+        <div class="class-icon">🔮</div>
+        <div class="class-info">
+          <div class="class-name">Mage</div>
+          <div class="class-name-vi">Pháp Sư</div>
+          <div class="class-desc">Pháp thuật hủy diệt, dame cực cao nhưng HP yếu. Cần chiến lược để tồn tại. Skill AOE mạnh nhất khi lên cap.</div>
+          <div class="class-stats">
+            <span class="stat-tag hp">HP: Thấp</span>
+            <span class="stat-tag mp">MP: Rất cao</span>
+            <span class="stat-tag atk">Dame: Cao nhất</span>
+          </div>
+        </div>
+      </div>
+      <div class="class-card" onclick="selectClass('rogue')">
+        <div class="class-icon">🗡️</div>
+        <div class="class-info">
+          <div class="class-name">Rogue</div>
+          <div class="class-name-vi">Thích Khách</div>
+          <div class="class-desc">Tốc độ vượt trội, skill ẩn thân và combo. Crit damage cao. Lối chơi linh hoạt, tấn công trước địch.</div>
+          <div class="class-stats">
+            <span class="stat-tag spd">SPD: Cao nhất</span>
+            <span class="stat-tag atk">Crit: Cao</span>
+            <span class="stat-tag hp">HP: Trung bình</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STORY -->
+  <div class="screen" id="screen-story">
+    <div class="title-art" style="font-size:50px" id="story-art">✨</div>
+    <div class="story-box">
+      <div class="speaker" id="story-speaker">Vị Thần</div>
+      <div id="story-text"></div>
+    </div>
+    <button class="btn btn-primary" id="story-btn" onclick="nextStory()">Tiếp tục →</button>
+  </div>
+
+  <!-- MAP -->
+  <div class="screen" id="screen-map">
+    <div class="top-bar">
+      <div>
+        <div class="player-name-top" id="map-player-name">Hero</div>
+        <div class="class-badge" id="map-class-badge">Warrior</div>
+      </div>
+      <div class="level-badge" id="map-level-badge">Lv.1</div>
+    </div>
+    <div class="stat-bars">
+      <div class="bar-row">
+        <div class="bar-label">HP</div>
+        <div class="bar-track"><div class="bar-fill hp" id="map-hp-bar" style="width:100%"></div></div>
+        <div class="bar-val" id="map-hp-val">100/100</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">XP</div>
+        <div class="bar-track"><div class="bar-fill xp" id="map-xp-bar" style="width:0%"></div></div>
+        <div class="bar-val" id="map-xp-val">0/100</div>
+      </div>
+    </div>
+    <div class="map-header">
+      <div class="map-title">🗺️ Bản đồ thế giới</div>
+      <div class="map-sub">Chọn khu vực để chiến đấu</div>
+    </div>
+    <div class="map-areas" id="map-areas"></div>
+    <div class="map-btn-row">
+      <button class="btn btn-primary" onclick="openStats()">📊 Thông số</button>
+      <button class="btn btn-success" onclick="openShop()">🏪 Shop</button>
+    </div>
+    <button class="btn btn-danger" onclick="goTo('title'); resetGame();" style="margin-top:8px">↩ Menu chính</button>
+  </div>
+
+  <!-- MODAL STATS -->
+  <div class="modal-overlay" id="modal-stats" onclick="closeModal('stats')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('stats')">✕</button>
+      <div class="modal-title">📊 Thông Số Nhân Vật</div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div style="font-size:11px;color:var(--dim);text-align:center;letter-spacing:1px">TRANG BỊ ĐANG MẶC</div>
+      <div class="equip-slots" id="equip-slots"></div>
+    </div>
+  </div>
+
+  <!-- MODAL SHOP -->
+  <div class="modal-overlay" id="modal-shop" onclick="closeModal('shop')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('shop')">✕</button>
+      <div class="modal-title">🏪 Cửa Hàng</div>
+      <div class="shop-gold" id="shop-gold">💰 Gold: 0</div>
+      <div class="shop-items" id="shop-items"></div>
+    </div>
+  </div>
+
+  <!-- GAME (BATTLE) -->
+  <div class="screen" id="screen-game">
+    <div class="top-bar">
+      <div>
+        <div class="player-name-top" id="battle-player-name">Hero</div>
+        <div class="class-badge" id="battle-class-badge">Warrior</div>
+      </div>
+      <div class="level-badge" id="battle-level-badge">Lv.1</div>
+    </div>
+    <div class="stat-bars">
+      <div class="bar-row">
+        <div class="bar-label">HP</div>
+        <div class="bar-track"><div class="bar-fill hp" id="hp-bar" style="width:100%"></div></div>
+        <div class="bar-val" id="hp-val">100/100</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">MP</div>
+        <div class="bar-track"><div class="bar-fill mp" id="mp-bar" style="width:100%"></div></div>
+        <div class="bar-val" id="mp-val">50/50</div>
+      </div>
+    </div>
+    <div class="battle-area">
+      <div class="enemy-section" id="enemy-section">
+        <div class="enemy-art" id="enemy-art">👹</div>
+        <div class="enemy-name" id="enemy-name">Goblin</div>
+        <div class="enemy-hp-bar"><div class="enemy-hp-fill" id="enemy-hp-bar" style="width:100%"></div></div>
+        <div class="enemy-hp-text" id="enemy-hp-text">50 / 50</div>
+      </div>
+      <div class="turn-indicator" id="turn-indicator">Lượt của <span>bạn</span></div>
+      <div class="battle-log" id="battle-log">
+        <div class="log-entry sys">⚔️ Trận chiến bắt đầu!</div>
+      </div>
+    </div>
+    <div class="skills-grid" id="skills-grid"></div>
+    <button class="btn btn-danger" onclick="fleeBattle()" style="width:100%">🏃 Chạy trốn</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="result-art" id="result-art">🏆</div>
+    <div class="result-title" id="result-title">Chiến thắng!</div>
+    <div class="result-desc" id="result-desc">Ngươi đã chiến thắng!</div>
+    <div class="result-rewards" id="result-rewards"></div>
+    <button class="btn btn-primary" id="result-btn" onclick="afterBattle()">Tiếp tục</button>
+  </div>
+  <!-- TUTORIAL OVERLAY -->
+  <div id="tut-overlay" class="tut-overlay">
+    <div class="tut-highlight" id="tut-highlight"></div>
+    <div class="tut-bubble" id="tut-bubble">
+      <div class="tut-bubble-arrow" id="tut-arrow">💡 HƯỚNG DẪN</div>
+      <div class="tut-bubble-text" id="tut-text"></div>
+      <button class="tut-bubble-btn" id="tut-btn" onclick="nextTutStep()">Hiểu rồi →</button>
+      <div class="tut-step-indicator" id="tut-step-ind"></div>
+    </div>
+  </div>
+
+</div>
+
+
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+<script src="js/stars.js"></script>
+</body>
+</html>
